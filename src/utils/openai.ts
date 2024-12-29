@@ -1,16 +1,12 @@
-import https from 'https';
 import type { ClientRequest, IncomingMessage } from 'http';
+import https from 'https';
+import createHttpsProxyAgent from 'https-proxy-agent';
 import type {
 	CreateChatCompletionRequest,
 	CreateChatCompletionResponse,
 } from 'openai';
-import {
-	type TiktokenModel,
-	// encoding_for_model,
-} from '@dqbd/tiktoken';
-import createHttpsProxyAgent from 'https-proxy-agent';
-import { KnownError } from './error.js';
 import type { CommitType } from './config.js';
+import { KnownError } from './error.js';
 import { generatePrompt } from './prompt.js';
 
 const httpsPost = async (
@@ -130,17 +126,19 @@ const deduplicateMessages = (array: string[]) => Array.from(new Set(array));
 // 	return tokens;
 // };
 
-export const generateCommitMessage = async (
+export async function generateCommitMessage(
 	apiKey: string,
-	model: TiktokenModel,
+	model: string,
 	locale: string,
 	diff: string,
-	completions: number,
+	generate: number,
 	maxLength: number,
 	type: CommitType,
 	timeout: number,
-	proxy?: string
-) => {
+	proxy?: string,
+	feedback?: string
+): Promise<string[]> {
+	const prompt = generatePrompt(locale, maxLength, type, feedback);
 	try {
 		const completion = await createChatCompletion(
 			apiKey,
@@ -149,7 +147,7 @@ export const generateCommitMessage = async (
 				messages: [
 					{
 						role: 'system',
-						content: generatePrompt(locale, maxLength, type),
+						content: prompt,
 					},
 					{
 						role: 'user',
@@ -162,12 +160,11 @@ export const generateCommitMessage = async (
 				presence_penalty: 0,
 				max_tokens: 200,
 				stream: false,
-				n: completions,
+				n: generate,
 			},
 			timeout,
 			proxy
 		);
-
 		return deduplicateMessages(
 			completion.choices
 				.filter((choice) => choice.message?.content)
@@ -183,4 +180,4 @@ export const generateCommitMessage = async (
 
 		throw errorAsAny;
 	}
-};
+}
