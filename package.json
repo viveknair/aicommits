@@ -1,11 +1,13 @@
 {
-	"name": "aicommits",
-	"version": "0.0.0-semantic-release",
-	"description": "Writes your git commit messages for you with AI",
+	"name": "@virtuallyvivek/aicommits",
+	"version": "0.1.0",
+	"description": "Writes your git commit messages for you with AI, with progressive refinement in CLI",
 	"keywords": [
 		"ai",
 		"git",
-		"commit"
+		"commit",
+		"cli",
+		"refinement"
 	],
 	"license": "MIT",
 	"repository": "Nutlope/aicommits",
