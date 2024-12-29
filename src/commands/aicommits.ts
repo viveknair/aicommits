@@ -6,6 +6,7 @@ import {
 	spinner,
 	select,
 	confirm,
+	text,
 	isCancel,
 } from '@clack/prompts';
 import {
@@ -62,6 +63,8 @@ export default async (
 
 		const s = spinner();
 		s.start('The AI is analyzing your changes');
+
+		let currentMessage: string;
 		let messages: string[];
 		try {
 			messages = await generateCommitMessage(
@@ -75,42 +78,54 @@ export default async (
 				config.timeout,
 				config.proxy
 			);
+			currentMessage = messages[0];
 		} finally {
 			s.stop('Changes analyzed');
 		}
 
-		if (messages.length === 0) {
-			throw new KnownError('No commit messages were generated. Try again.');
-		}
-
-		let message: string;
-		if (messages.length === 1) {
-			[message] = messages;
-			const confirmed = await confirm({
-				message: `Use this commit message?\n\n   ${message}\n`,
+		// New interactive refinement loop
+		while (true) {
+			const response = await text({
+				message: `Is this message good?\n→ ${currentMessage}\n(Type feedback or 'yes' to accept)`,
 			});
 
-			if (!confirmed || isCancel(confirmed)) {
+			if (isCancel(response)) {
 				outro('Commit cancelled');
-				return;
-			}
-		} else {
-			const selected = await select({
-				message: `Pick a commit message to use: ${dim('(Ctrl+c to exit)')}`,
-				options: messages.map((value) => ({ label: value, value })),
-			});
-
-			if (isCancel(selected)) {
-				outro('Commit cancelled');
-				return;
+				process.exit(0);
 			}
 
-			message = selected as string;
+			if (response.toLowerCase() === 'yes') {
+				break;
+			}
+
+			// Generate refined message based on feedback
+			s.start('Refining commit message');
+			try {
+				messages = await generateCommitMessage(
+					config.OPENAI_KEY,
+					config.model,
+					config.locale,
+					staged.diff,
+					1,
+					config['max-length'],
+					config.type,
+					config.timeout,
+					config.proxy,
+					response // Pass feedback as additional context
+				);
+				currentMessage = messages[0];
+			} finally {
+				s.stop('Message refined');
+			}
 		}
 
-		await execa('git', ['commit', '-m', message, ...rawArgv]);
-
-		outro(`${green('✔')} Successfully committed!`);
+		// Existing commit creation code
+		try {
+			await execa('git', ['commit', '-m', currentMessage, ...rawArgv]);
+			outro(`${green('✔')} Commit created successfully`);
+		} catch (error) {
+			throw new KnownError('Failed to create commit', { cause: error });
+		}
 	})().catch((error) => {
 		outro(`${red('✖')} ${error.message}`);
 		handleCliError(error);

@@ -12,6 +12,7 @@ import createHttpsProxyAgent from 'https-proxy-agent';
 import { KnownError } from './error.js';
 import type { CommitType } from './config.js';
 import { generatePrompt } from './prompt.js';
+import { Configuration, OpenAIApi } from 'openai';
 
 const httpsPost = async (
 	hostname: string,
@@ -130,17 +131,27 @@ const deduplicateMessages = (array: string[]) => Array.from(new Set(array));
 // 	return tokens;
 // };
 
-export const generateCommitMessage = async (
+export async function generateCommitMessage(
 	apiKey: string,
-	model: TiktokenModel,
+	model: string,
 	locale: string,
 	diff: string,
-	completions: number,
+	generate: number,
 	maxLength: number,
 	type: CommitType,
 	timeout: number,
-	proxy?: string
-) => {
+	proxy?: string,
+	feedback?: string
+): Promise<string[]> {
+	const configuration = new Configuration({
+		apiKey,
+		// ... existing config
+	});
+
+	const openai = new OpenAIApi(configuration);
+
+	const prompt = generatePrompt(locale, maxLength, type, feedback);
+
 	try {
 		const completion = await createChatCompletion(
 			apiKey,
@@ -149,7 +160,7 @@ export const generateCommitMessage = async (
 				messages: [
 					{
 						role: 'system',
-						content: generatePrompt(locale, maxLength, type),
+						content: prompt,
 					},
 					{
 						role: 'user',
@@ -162,7 +173,7 @@ export const generateCommitMessage = async (
 				presence_penalty: 0,
 				max_tokens: 200,
 				stream: false,
-				n: completions,
+				n: generate,
 			},
 			timeout,
 			proxy
@@ -183,4 +194,4 @@ export const generateCommitMessage = async (
 
 		throw errorAsAny;
 	}
-};
+}
