@@ -56,8 +56,9 @@ export const generatePrompt = (
 	if (feedback) {
 		basePrompt.push(
 			'',
-			'Please refine the previous commit message based on this feedback. This feedback is INCREDIBLY IMPORTANT and you should bias your response towards it:',
-			feedback
+			'IMPORTANT INSTRUCTION - YOU MUST FOLLOW THIS:',
+			feedback,
+			'The above instruction takes precedence over all other requirements except format.'
 		);
 	}
 
