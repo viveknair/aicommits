@@ -1,18 +1,13 @@
-import https from 'https';
 import type { ClientRequest, IncomingMessage } from 'http';
+import https from 'https';
+import createHttpsProxyAgent from 'https-proxy-agent';
 import type {
 	CreateChatCompletionRequest,
 	CreateChatCompletionResponse,
 } from 'openai';
-import {
-	type TiktokenModel,
-	// encoding_for_model,
-} from '@dqbd/tiktoken';
-import createHttpsProxyAgent from 'https-proxy-agent';
-import { KnownError } from './error.js';
 import type { CommitType } from './config.js';
+import { KnownError } from './error.js';
 import { generatePrompt } from './prompt.js';
-import { Configuration, OpenAIApi } from 'openai';
 
 const httpsPost = async (
 	hostname: string,
@@ -143,20 +138,8 @@ export async function generateCommitMessage(
 	proxy?: string,
 	feedback?: string
 ): Promise<string[]> {
-	const configuration = new Configuration({
-		apiKey,
-		// ... existing config
-	});
-
-	const openai = new OpenAIApi(configuration);
-
 	const prompt = generatePrompt(locale, maxLength, type, feedback);
 	try {
-		console.log('❤️ [OPENAI-GEN] Sending chat completion request:', {
-			model,
-			prompt,
-			diff,
-		});
 		const completion = await createChatCompletion(
 			apiKey,
 			{
@@ -182,10 +165,6 @@ export async function generateCommitMessage(
 			timeout,
 			proxy
 		);
-		console.log('❤️ [OPENAI-GEN] Received chat completion response:', {
-			completion,
-		});
-
 		return deduplicateMessages(
 			completion.choices
 				.filter((choice) => choice.message?.content)

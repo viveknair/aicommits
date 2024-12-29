@@ -62,10 +62,5 @@ export const generatePrompt = (
 		);
 	}
 
-	console.log('❤️ [PROMPT] Generated prompt with feedback:', {
-		basePrompt,
-		feedback,
-	});
-
 	return basePrompt.filter(Boolean).join('\n');
 };
