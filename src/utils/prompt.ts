@@ -56,10 +56,15 @@ export const generatePrompt = (
 	if (feedback) {
 		basePrompt.push(
 			'',
-			'Please refine the previous commit message based on this feedback:',
+			'Please refine the previous commit message based on this feedback. This feedback is INCREDIBLY IMPORTANT and you should bias your response towards it:',
 			feedback
 		);
 	}
+
+	console.log('❤️ [PROMPT] Generated prompt with feedback:', {
+		basePrompt,
+		feedback,
+	});
 
 	return basePrompt.filter(Boolean).join('\n');
 };

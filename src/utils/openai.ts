@@ -151,8 +151,12 @@ export async function generateCommitMessage(
 	const openai = new OpenAIApi(configuration);
 
 	const prompt = generatePrompt(locale, maxLength, type, feedback);
-
 	try {
+		console.log('❤️ [OPENAI-GEN] Sending chat completion request:', {
+			model,
+			prompt,
+			diff,
+		});
 		const completion = await createChatCompletion(
 			apiKey,
 			{
@@ -178,6 +182,9 @@ export async function generateCommitMessage(
 			timeout,
 			proxy
 		);
+		console.log('❤️ [OPENAI-GEN] Received chat completion response:', {
+			completion,
+		});
 
 		return deduplicateMessages(
 			completion.choices
