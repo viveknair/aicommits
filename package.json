@@ -15,8 +15,8 @@
 		"dist"
 	],
 	"bin": {
-		"aicommits": "./dist/cli.mjs",
-		"aic": "./dist/cli.mjs"
+		"vaicommits": "./dist/cli.mjs",
+		"vaic": "./dist/cli.mjs"
 	},
 	"scripts": {
 		"build": "pkgroll --minify",
