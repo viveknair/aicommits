@@ -74,6 +74,10 @@ Sometimes the recommended commit message isn't the best so you want it to genera
 vaicommits --generate <i> # or -g <i>
 ```
 
+#### Customizing the number of tokens
+
+You can customize the maximum length of the generated commit message by using the `--max-length` flag followed by the desired character count:
+
 > Warning: this uses more tokens, meaning it costs more.
 
 #### Generating Conventional Commits
